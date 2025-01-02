@@ -1,1 +1,1 @@
-#define PG_URL 
+#define PG_URL "postgresql://user:secret@localhost/postgres"
