@@ -1,0 +1,19 @@
+CREATE TABLE TOPICOS (
+    id uuid PRIMARY KEY DEFAULT GEN_RANDOM_UUID(),
+    nome VARCHAR(150) NOT NULL,
+    descricao TEXT NOT NULL,
+    data_criacao TIMESTAMP NOT NULL DEFAULT NOW()
+)
+
+CREATE TABLE POSTS (
+    id uuid PRIMARY KEY DEFAULT GEN_RANDOM_UUID(),
+    titulo VARCHAR(150) NOT NULL,
+    texto TEXT NOT NULL,
+
+    likes INTEGER NOT NULL DEFAULT 0 CHECK(likes >= 0),
+
+    topico uuid NOT NULL REFERENCES topicos,
+    resposta uuid REFERENCES posts,
+
+    data_criacao TIMESTAMP NOT NULL DEFAULT NOW()
+)
