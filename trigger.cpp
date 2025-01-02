@@ -1,13 +1,14 @@
 #include "crow.h"
 #include "iostream"
 #include "pqxx/pqxx"
+#include "env.h"
+
 using namespace std;
 
-pqxx::connection cx{""};
+pqxx::connection cx{PG_URL};
 pqxx::work tx{cx};
 
-int main()
-{
+int main(){
     crow::SimpleApp app;
 
     CROW_ROUTE(app, "/")([](){
