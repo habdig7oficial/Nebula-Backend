@@ -1,6 +1,6 @@
 /* Compile com o G++: g++ trigger.cpp -o nebula.elf -lpqxx -lpq && ./nebula.elf */
 
-//#include "crow.h"
+#include "crow.h"
 #include "iostream"
 #include "pqxx/pqxx"
 #include "env.h"
