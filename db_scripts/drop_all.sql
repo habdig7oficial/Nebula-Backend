@@ -1,0 +1,1 @@
+DROP PROCEDURE new_post
