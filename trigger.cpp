@@ -46,8 +46,7 @@ int main(){
 
         size_t const num_rows = size(r);
         vector<crow::json::wvalue> db_rows;
-        for (size_t rownum=0u; rownum < num_rows; ++rownum)
-        {
+        for (size_t rownum=0u; rownum < num_rows; ++rownum){
         pqxx::row const row = r[rownum];
         crow::json::wvalue sub_json;
 
@@ -66,7 +65,7 @@ int main(){
 
         crow::json::wvalue last = std::move(db_rows);
 
-        return crow::response(std::move(last));
+        return response(std::move(last));
     });
 
     CROW_ROUTE(app, "/")([](){
