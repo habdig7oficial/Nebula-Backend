@@ -5,14 +5,21 @@ Com Compressão: g++ trigger.cpp -DCROW_ENABLE_COMPRESSION -o nebula.elf -lpqxx 
 
 #include "crow.h"
 #include "crow/middlewares/cors.h"
-#include "crow/compression.h"
 #include "iostream"
 #include "pqxx/pqxx"
 #include "env.h"
-
 #include "vector"
 
-#include <ctime>
+#include "routes/routes.hpp"
+
+
+#if defined(NEBULA_COMPRESSION_GZIP) || defined(NEBULA_COMPRESSION_DEFLATE)
+    #include "crow/compression.h"
+#endif
+
+#if !defined(BACKEND_PORT)
+    #define BACKEND_PORT 7777
+#endif
 
 using namespace std;
 using namespace crow;
@@ -22,61 +29,28 @@ int main(){
 
     crow::App<crow::CORSHandler> app;
     
-    CROW_ROUTE(app, "/posts/new").methods("POST"_method)([](const crow::request& req){
-        pqxx::connection cx{PG_URL};
-        pqxx::work tx{cx};
-        auto body = crow::json::load(req.body);
+    CROW_ROUTE(app, "/posts/new").methods("POST"_method)(new_posts);
+    CROW_ROUTE(app, "/posts/read").methods("GET"_method)(read_posts);
+    CROW_ROUTE(app, "/").methods("GET"_method)(index_route);
 
+    CROW_CATCHALL_ROUTE(app)([](const crow::request&, crow::response& res){
 
-        tx.exec("CALL new_post($1, $2, $3, NULL)", pqxx::params{string(body["titulo"]), string(body["texto"]), string(body["topico"])});
-        tx.commit();
-    
-        return crow::response(200, "ok");
+        switch(res.code){
+            case 404:
+                res.body = "Not found!!!";
+        };
+
+        res.end();
     });
 
-    CROW_ROUTE(app, "/posts/read").methods("GET"_method)([](const crow::request& req){
-        pqxx::connection cx{PG_URL};
-        pqxx::work tx{cx};
 
-        int limit = req.url_params.get("limit") ? stoi(req.url_params.get("limit")) : 5;
-        int offset = req.url_params.get("offset") ? stoi(req.url_params.get("offset")) : 0;
-        bool desc  = stoi(req.url_params.get("desc")? req.url_params.get("desc") : "0") == 0 ? false : true;
-
-        cout << "limite: " << limit << endl << "pagina: " << offset << endl;
-
-        pqxx::result r = tx.exec("SELECT * FROM read_posts($1, $2, $3)", pqxx::params{offset, limit, desc});
-        tx.commit();
-
-        size_t const num_rows = size(r);
-        vector<crow::json::wvalue> db_rows;
-        for (size_t rownum=0u; rownum < num_rows; ++rownum){
-        pqxx::row const row = r[rownum];
-        crow::json::wvalue sub_json;
-
-        /* Montando JSON */
-        string fields[] = {"id", "titulo", "texto", "topico", "likes", "resposta", "data_criacao" };
-
-        for(string field : fields){
-            sub_json[field] = row[field].c_str();
-        }
-
-        db_rows.push_back(std::move(sub_json));
-
-
-        cout << db_rows[rownum].dump() << '\n';
-        }
-
-        crow::json::wvalue last = std::move(db_rows);
-
-        return response(std::move(last));
-    });
-
-    CROW_ROUTE(app, "/")([](){
-        return "hello";
-    });
-
-    app.port(7777)
-        .use_compression(crow::compression::algorithm::GZIP)
+    app.port(BACKEND_PORT)
+        #if defined(NEBULA_COMPRESSION_GZIP)
+            .use_compression(crow::compression::algorithm::GZIP)
+        #endif
+        #if defined(NEBULA_COMPRESSION_DEFLATE)
+            .use_compression(crow::compression::algorithm::DEFLATE)
+        #endif
         .multithreaded()
         .run();
 }
