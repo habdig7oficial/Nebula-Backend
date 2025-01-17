@@ -7,7 +7,7 @@ END
 
 
 CREATE FUNCTION read_posts(pagina integer, limite integer, ordenar boolean) 
-RETURNS TABLE(titulo varchar(150), texto text, topico uuid, likes integer, resposta uuid, data_criacao timestamp)
+RETURNS TABLE(id uuid, titulo varchar(150), texto text, topico uuid, likes integer, resposta uuid, data_criacao timestamp)
 LANGUAGE PLPGSQL 
 AS $$
 BEGIN
@@ -15,7 +15,7 @@ BEGIN
         RAISE EXCEPTION 'NÃO PODE EXISTIR PAGINA OU LIMITE NEGATIVA';
     ELSE 
         RETURN QUERY 
-        SELECT posts.titulo, posts.texto, posts.topico, posts.likes, posts.resposta, posts.data_criacao 
+        SELECT posts.id, posts.titulo, posts.texto, posts.topico, posts.likes, posts.resposta, posts.data_criacao 
         FROM posts 
         ORDER BY 
             CASE 
@@ -32,3 +32,10 @@ BEGIN
     END IF;
 END;
 $$;
+
+
+CREATE PROCEDURE increment_likes(target_id uuid)
+LANGUAGE SQL 
+BEGIN ATOMIC 
+    UPDATE posts SET likes = likes + 1 WHERE id = $1;
+END

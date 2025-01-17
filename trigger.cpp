@@ -2,6 +2,7 @@
 
 #include "crow.h"
 #include "crow/middlewares/cors.h"
+#include "crow/compression.h"
 #include "iostream"
 #include "pqxx/pqxx"
 #include "env.h"
@@ -18,8 +19,7 @@ int main(){
 
     crow::App<crow::CORSHandler> app;
     
-
-    CROW_ROUTE(app, "/post/new").methods("POST"_method)([](const crow::request& req){
+    CROW_ROUTE(app, "/posts/new").methods("POST"_method)([](const crow::request& req){
         pqxx::connection cx{PG_URL};
         pqxx::work tx{cx};
         auto body = crow::json::load(req.body);
@@ -31,7 +31,7 @@ int main(){
         return crow::response(200, "ok");
     });
 
-    CROW_ROUTE(app, "/post/read").methods("GET"_method)([](const crow::request& req){
+    CROW_ROUTE(app, "/posts/read").methods("GET"_method)([](const crow::request& req){
         pqxx::connection cx{PG_URL};
         pqxx::work tx{cx};
 
@@ -51,7 +51,7 @@ int main(){
         crow::json::wvalue sub_json;
 
         /* Montando JSON */
-        string fields[] = { "titulo", "texto", "topico", "likes", "resposta", "data_criacao" };
+        string fields[] = {"id", "titulo", "texto", "topico", "likes", "resposta", "data_criacao" };
 
         for(string field : fields){
             sub_json[field] = row[field].c_str();
@@ -72,5 +72,8 @@ int main(){
         return "hello";
     });
 
-    app.port(7777).multithreaded().run();
+    app.port(7777)
+        .use_compression(crow::compression::algorithm::GZIP)
+        .multithreaded()
+        .run();
 }
