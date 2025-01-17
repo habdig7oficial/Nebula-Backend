@@ -1,4 +1,7 @@
-/* Compile com o G++: g++ trigger.cpp -o nebula.elf -lpqxx -lpq && ./nebula.elf */
+/* 
+Compile com o G++: g++ trigger.cpp -o nebula.elf -lpqxx -lpq && ./nebula.elf
+Com Compressão: g++ trigger.cpp -DCROW_ENABLE_COMPRESSION -o nebula.elf -lpqxx -lpq -lz && ./nebula.elf
+*/
 
 #include "crow.h"
 #include "crow/middlewares/cors.h"
