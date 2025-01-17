@@ -37,10 +37,11 @@ int main(){
 
         int limit = req.url_params.get("limit") ? stoi(req.url_params.get("limit")) : 5;
         int offset = req.url_params.get("offset") ? stoi(req.url_params.get("offset")) : 0;
+        bool desc  = stoi(req.url_params.get("desc")? req.url_params.get("desc") : "0") == 0 ? false : true;
 
         cout << "limite: " << limit << endl << "pagina: " << offset << endl;
 
-        pqxx::result r = tx.exec("SELECT * FROM read_posts($1, $2)", pqxx::params{offset, limit});
+        pqxx::result r = tx.exec("SELECT * FROM read_posts($1, $2, $3)", pqxx::params{offset, limit, desc});
         tx.commit();
 
         size_t const num_rows = size(r);
